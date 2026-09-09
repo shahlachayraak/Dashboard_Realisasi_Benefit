@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Benefit Prohire & Rehire</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f6f9;
+        }
+
+        .card-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            flex: 1;
+        }
+
+        .search-box {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #003366;
+            color: white;
+        }
+
+        .selesai {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        .kendala {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>📊 Dashboard Realisasi Benefit Prohire & Rehire</h2>
+
+    <!-- Ringkasan KPI -->
+    <div class="card-container">
+        <div class="card">
+            <h3>Total pegawai</h3>
+            <p id="total-pegawai">10 Orang</p>
+        </div>
+        <div class="card">
+            <h3>UPCT Selesai</h3>
+            <p id="total-upct">6 / 10</p>
+        </div>
+        <div class="card">
+            <h3>THR Selesai</h3>
+            <p id="total-thr">9 / 10</p>
+        </div>
+    </div>
+
+    <!-- Fitur Pencarian PERNER -->
+    <div class="search-box">
+        <label for="pernerSelect"><b>Pilih PERNER / NIP:</b> </label>
+        <select id="pernerSelect" onchange="tampilkanDetail()">
+            <!-- Option akan terisi otomatis dari script -->
+        </select>
+        <div id="detail-pegawai" style="margin-top: 15px;"></div>
+    </div>
+
+    <!-- Tabel Rekap Utama -->
+    <h3>Rekapitulasi Data pegawai</h3>
+    <table id="tabel-rekap">
+        <thead>
+            <tr>
+                <th>NIP</th>
+                <th>PERNER</th>
+                <th>Nama</th>
+                <th>Tipe</th>
+                <th>Status UPCT</th>
+                <th>Status THR</th>
+                <th>Kendala</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        // Data Dummy dari Excel Kamu
+        const datapegawai = [
+            { nip: "2155101001", perner: "55101", nama: "Budi Santoso", tipe: "Prohire", gaji: 15000000, statusUpct: "Selesai", statusThr: "Ada Kendala", kendala: "Verifikasi rekening" },
+            { nip: "2155102002", perner: "55102", nama: "Siti Aminah", tipe: "Rehire", gaji: 18500000, statusUpct: "Selesai", statusThr: "Selesai", kendala: "-" },
+            { nip: "2155103003", perner: "55103", nama: "Rizky Pratama", tipe: "Prohire", gaji: 12000000, statusUpct: "On Progress", statusThr: "Selesai", kendala: "Menunggu approval" }
+        ];
+
+        // Load Dropdown & Tabel saat pertama dibuka
+        window.onload = function () {
+            const select = document.getElementById("pernerSelect");
+            const tbody = document.querySelector("#tabel-rekap tbody");
+
+            datapegawai.forEach(k => {
+                // Isi Dropdown
+                let opt = document.createElement("option");
+                opt.value = k.perner;
+                opt.textContent = `${k.perner} - ${k.nama}`;
+                select.appendChild(opt);
+
+                // Isi Tabel
+                let row = `<tr>
+                    <td>${k.nip}</td>
+                    <td>${k.perner}</td>
+                    <td>${k.nama}</td>
+                    <td>${k.tipe}</td>
+                    <td><span class="${k.statusUpct === 'Selesai' ? 'selesai' : ''}">${k.statusUpct}</span></td>
+                    <td><span class="${k.statusThr === 'Selesai' ? 'selesai' : 'kendala'}">${k.statusThr}</span></td>
+                    <td>${k.kendala}</td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+
+            tampilkanDetail();
+        };
+
+        // Fungsi Filter Detail Per Orang
+        function tampilkanDetail() {
+            const selectedPerner = document.getElementById("pernerSelect").value;
+            const k = datapegawai.find(item => item.perner === selectedPerner);
+
+            const detailDiv = document.getElementById("detail-pegawai");
+            detailDiv.innerHTML = `
+                <hr>
+                <p><b>Nama:</b> ${k.nama} | <b>Tipe:</b> ${k.tipe} | <b>Gaji Pokok:</b> Rp ${k.gaji.toLocaleString()}</p>
+                <p>🌴 <b>Nominal UPCT (1x Gaji):</b> Rp ${k.gaji.toLocaleString()} (${k.statusUpct})</p>
+                <p>🎁 <b>Nominal THR (2x Gaji):</b> Rp ${(k.gaji * 2).toLocaleString()} (${k.statusThr})</p>
+                <p>⚠️ <b>Catatan Kendala:</b> ${k.kendala}</p>
+            `;
+        }
+    </script>
+</body>
+
+</html>
