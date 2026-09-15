@@ -672,87 +672,192 @@ if not df.empty:
 
         pegawai_options, map_name = get_unique_pegawai_options(df, col_nama, col_nip, col_status_peg)
 
-        if pegawai_options:
-            selected_pegawai_label = st.selectbox(
-                "Pilih Pegawai (Nama / NIP):",
-                options=pegawai_options,
-                key="edit_pegawai_select"
-            )
+        selected_pegawai_label = st.selectbox(
+            "Pilih Pegawai (Nama / NIP):",
+            options=pegawai_options,
+            key="edit_pegawai_select"
+        )
 
-            selected_nama_extracted = map_name[selected_pegawai_label]
-            df_pegawai = df[df[col_nama].astype(str).str.strip() == selected_nama_extracted].copy()
+        selected_nama_extracted = map_name[selected_pegawai_label]
 
-            sk_options = df_pegawai.apply(
-                lambda r: f"SK: {r.get(col_sk, '-')} | NIP: {r.get(col_nip, '-')} ({r.get('Status Pegawai', 'Aktif')})",
-                axis=1,
-            ).tolist()
+        df_pegawai = df[df[col_nama].astype(str).str.strip() == selected_nama_extracted].copy()
 
-            selected_sk_label = st.selectbox(
-                "Pilih Riwayat SK:",
-                options=sk_options,
-                key="edit_sk_select"
-            )
+        sk_options = df_pegawai.apply(
+            lambda r: f"SK: {r.get(col_sk, '-')} | NIP: {r.get(col_nip, '-')} ({r.get('Status Pegawai', 'Aktif')})",
+            axis=1,
+        ).tolist()
 
-            selected_idx = df_pegawai.index[sk_options.index(selected_sk_label)]
-            row_data = df.iloc[selected_idx]
+        selected_sk_label = st.selectbox(
+            "Pilih Riwayat SK:",
+            options=sk_options,
+            key="edit_sk_select"
+        )
 
-            st.info(
-                f"✍️ Menampilkan Data Pegawai: **{row_data.get(col_nama, '-')}** "
-                f"| NIP SK Ini: `{row_data.get(col_nip, '-')}` | SK: `{row_data.get(col_sk, '-')}` | Status: **{row_data.get('Status Pegawai', 'Aktif')}**"
-            )
+        selected_idx = df_pegawai.index[sk_options.index(selected_sk_label)]
+        row_data = df.iloc[selected_idx]
 
-            col_e1, col_e2 = st.columns(2)
+        st.info(
+            f"✍️ Menampilkan Data Pegawai: *{row_data.get(col_nama, '-')}* "
+            f"| NIP SK Ini: ⁠ {row_data.get(col_nip, '-')} ⁠ | SK: ⁠ {row_data.get(col_sk, '-')} ⁠ | Status: *{row_data.get('Status Pegawai', 'Aktif')}*"
+        )
 
-            with col_e1:
-                val_nip = st.text_input("NIP", value=str(row_data.get(col_nip, "")), key=f"e_nip_{selected_idx}")
-                val_perner = st.text_input("PERNER", value=str(row_data.get(col_perner, "")), key=f"e_perner_{selected_idx}")
-                val_nama = st.text_input("Nama Lengkap", value=str(row_data.get(col_nama, "")), key=f"e_nama_{selected_idx}")
+        col_e1, col_e2 = st.columns(2)
 
-                curr_j = str(row_data.get("Jenis", "ProHire"))
-                val_jenis = st.selectbox("Jenis Pegawai", ["ProHire", "ReHire"], index=0 if "pro" in curr_j.lower() else 1, key=f"e_jenis_{selected_idx}")
+        with col_e1:
+            val_nip = st.text_input("NIP", value=str(row_data.get(col_nip, "")), key=f"e_nip_{selected_idx}")
+            val_perner = st.text_input("PERNER", value=str(row_data.get(col_perner, "")), key=f"e_perner_{selected_idx}")
+            val_nama = st.text_input("Nama Lengkap", value=str(row_data.get(col_nama, "")), key=f"e_nama_{selected_idx}")
 
-                curr_a = str(row_data.get("Agama", "-"))
-                val_agama = st.selectbox("Agama", LIST_AGAMA, index=LIST_AGAMA.index(curr_a) if curr_a in LIST_AGAMA else len(LIST_AGAMA) - 1, key=f"e_agama_{selected_idx}")
+            curr_j = str(row_data.get("Jenis", "ProHire"))
+            val_jenis = st.selectbox("Jenis Pegawai", ["ProHire", "ReHire"], index=0 if "pro" in curr_j.lower() else 1, key=f"e_jenis_{selected_idx}")
 
-                curr_sp = str(row_data.get("Status Pegawai", "Aktif"))
-                val_status_peg = st.selectbox("Status Record SK Ini", LIST_STATUS_PEGAWAI, index=0 if "aktif" in curr_sp.lower() and "tidak" not in curr_sp.lower() and "selesai" not in curr_sp.lower() else 1, key=f"e_sp_{selected_idx}")
+            curr_a = str(row_data.get("Agama", "-"))
+            val_agama = st.selectbox("Agama", LIST_AGAMA, index=LIST_AGAMA.index(curr_a) if curr_a in LIST_AGAMA else len(LIST_AGAMA) - 1, key=f"e_agama_{selected_idx}")
 
-            with col_e2:
-                val_gaji = st.number_input("Gaji Pokok (Rp)", value=parse_number(row_data.get("gaji_pokok", 0)), step=100000.0, format="%.0f", key=f"e_gaji_{selected_idx}")
-                val_b_upct = st.number_input("Bobot UPCT", value=parse_number(row_data.get("bobot_upct", 0.5)), step=0.5, key=f"e_b_upct_{selected_idx}")
-                val_b_thr = st.number_input("Bobot THR", value=parse_number(row_data.get("bobot_thr", 1.0)), step=0.5, key=f"e_b_thr_{selected_idx}")
-                val_sk = st.text_input("No. Dokumen SK", value=str(row_data.get(col_sk, "")), key=f"e_sk_{selected_idx}")
-                
-                start_val = parse_date_value(row_data.get("start_date", ""))
-                end_val = parse_date_value(row_data.get("end_date", ""))
-                
-                val_start = st.date_input("Start Date", value=start_val, key=f"e_start_{selected_idx}")
-                val_end = st.date_input("End Date", value=end_val, key=f"e_end_{selected_idx}")
+            curr_sp = str(row_data.get("Status Pegawai", "Aktif"))
+            val_status_peg = st.selectbox("Status Record SK Ini", LIST_STATUS_PEGAWAI, index=0 if "aktif" in curr_sp.lower() and "tidak" not in curr_sp.lower() and "selesai" not in curr_sp.lower() else 1, key=f"e_sp_{selected_idx}")
 
-                selisih_hari = (val_end - val_start).days
-                val_masa_kontrak = f"{round(selisih_hari / 30)} Bulan ({selisih_hari} Hari)" if selisih_hari > 0 else "0 Hari"
-                st.text_input("Masa Kontrak (Otomatis):", value=val_masa_kontrak, disabled=True, key=f"e_masa_{selected_idx}")
+        with col_e2:
+            val_gaji = st.number_input("Gaji Pokok (Rp)", value=parse_number(row_data.get("gaji_pokok", 0)), step=100000.0, format="%.0f", key=f"e_gaji_{selected_idx}")
+            val_b_upct = st.number_input("Bobot UPCT", value=parse_number(row_data.get("bobot_upct", 0.5)), step=0.5, key=f"e_b_upct_{selected_idx}")
+            val_b_thr = st.number_input("Bobot THR", value=parse_number(row_data.get("bobot_thr", 1.0)), step=0.5, key=f"e_b_thr_{selected_idx}")
+            val_no_sk = st.text_input("No. SK / Addendum Baru/Lama", value=str(row_data.get(col_sk, "")), key=f"e_sk_{selected_idx}")
 
-            if st.button("💾 Simpan Perubahan Data", type="primary"):
-                df.loc[selected_idx, col_nip] = str(val_nip).strip()
-                df.loc[selected_idx, col_perner] = str(val_perner).strip()
-                df.loc[selected_idx, col_nama] = str(val_nama).strip()
-                df.loc[selected_idx, "Jenis"] = str(val_jenis)
-                df.loc[selected_idx, "Agama"] = str(val_agama)
-                df.loc[selected_idx, "Status Pegawai"] = str(val_status_peg)
-                df.loc[selected_idx, "gaji_pokok"] = val_gaji
-                df.loc[selected_idx, "bobot_upct"] = val_b_upct
-                df.loc[selected_idx, "nilai_upct"] = val_gaji * val_b_upct
-                df.loc[selected_idx, "bobot_thr"] = val_b_thr
-                df.loc[selected_idx, "nilai_thr"] = val_gaji * val_b_thr
-                df.loc[selected_idx, col_sk] = str(val_sk).strip()
-                df.loc[selected_idx, "start_date"] = val_start.strftime("%Y-%m-%d")
-                df.loc[selected_idx, "end_date"] = val_end.strftime("%Y-%m-%d")
-                df.loc[selected_idx, "masa_kontrak"] = val_masa_kontrak
+            start_d_val = parse_date_value(row_data.get("start_date", ""))
+            end_d_val = parse_date_value(row_data.get("end_date", ""))
+
+            val_start = st.date_input("Start Date", value=start_d_val, key=f"e_start_{selected_idx}")
+            val_end = st.date_input("End Date", value=end_d_val, key=f"e_end_{selected_idx}")
+
+            selisih = (val_end - val_start).days
+            m_kontrak_auto = f"{round(selisih / 30)} Bulan ({selisih} Hari)" if selisih > 0 else "0 Hari"
+            st.text_input("Masa Kontrak (Terhitung Otomatis):", value=m_kontrak_auto, disabled=True, key=f"e_mk_{selected_idx}")
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        btn_col1, btn_col2 = st.columns(2)
+
+        with btn_col1:
+             if st.button("🔄 Perbarui Record SK Ini Saja", use_container_width=True):
+                old_nama_val = str(row_data.get(col_nama, "")).strip()
+                indices_to_sync = df[
+                    df[col_nama].astype(str).str.strip() == old_nama_val
+                ].index
+
+                for idx_sync in indices_to_sync:
+                    df.at[idx_sync, col_nama] = str(val_nama).strip()
+
+                # Tentukan status pegawai berdasarkan pilihan form
+                status_clean = str(val_status_peg).lower()
+                is_pegawai_aktif = (
+                    "aktif" in status_clean
+                    and "tidak" not in status_clean
+                    and "selesai" not in status_clean
+                )
+                status_final = (
+                    "Aktif" if is_pegawai_aktif else "Selesai Kontrak / Tidak Aktif"
+                )
+
+                # Hitung masa kontrak otomatis berdasarkan status pegawai
+                if is_pegawai_aktif and val_start and val_end:
+                    selisih = (val_end - val_start).days
+                    m_kontrak_auto = (
+                        f"{round(selisih / 30)} Bulan ({selisih} Hari)"
+                        if selisih > 0
+                        else "0 Hari"
+                    )
+                else:
+                    m_kontrak_auto = "0 Hari (Tidak Aktif)"
+
+                df.at[selected_idx, col_nip] = str(val_nip).strip()
+                df.at[selected_idx, col_perner] = str(val_perner).strip()
+                df.at[selected_idx, "Jenis"] = str(val_jenis)
+                df.at[selected_idx, "Agama"] = str(val_agama)
+                df.at[selected_idx, "Status Pegawai"] = status_final
+                df.at[selected_idx, "gaji_pokok"] = val_gaji
+                df.at[selected_idx, "bobot_upct"] = val_b_upct
+                df.at[selected_idx, "nilai_upct"] = val_gaji * val_b_upct
+                df.at[selected_idx, "bobot_thr"] = val_b_thr
+                df.at[selected_idx, "nilai_thr"] = val_gaji * val_b_thr
+                df.at[selected_idx, col_sk] = str(val_no_sk).strip()
+                df.at[selected_idx, "start_date"] = (
+                    val_start.strftime("%Y-%m-%d") if val_start else ""
+                )
+                df.at[selected_idx, "end_date"] = (
+                    val_end.strftime("%Y-%m-%d") if val_end else ""
+                )
+                df.at[selected_idx, "masa_kontrak"] = m_kontrak_auto
 
                 save_data(df)
-                st.session_state["flash_msg"] = f"✅ Perubahan Data SK {val_sk} BERHASIL DISIMPAN!"
+                st.session_state["flash_msg"] = (
+                    f"✅ Data SK {val_no_sk} ({val_nama}) berhasil diperbarui!"
+                )
                 st.rerun()
+
+        with btn_col2:
+            if st.button(
+                "➕ Simpan Sebagai Perpanjangan SK Baru",
+                type="primary",
+                use_container_width=True,
+                ):
+                # SK Lama otomatis diubah ke status Tidak Aktif dan Masa Kontrak jadi 0 Hari
+                df.at[selected_idx, "Status Pegawai"] = "Selesai Kontrak / Tidak Aktif"
+                df.at[selected_idx, "masa_kontrak"] = "0 Hari (Tidak Aktif)"
+
+                # Hitung masa kontrak otomatis untuk SK BARU (selalu Aktif)
+                if val_start and val_end:
+                    selisih_baru = (val_end - val_start).days
+                    m_kontrak_baru = (
+                        f"{round(selisih_baru / 30)} Bulan ({selisih_baru} Hari)"
+                        if selisih_baru > 0
+                        else "0 Hari"
+                    )
+                else:
+                    m_kontrak_baru = "0 Hari"
+
+                new_row_data = df.iloc[selected_idx].to_dict()
+
+                new_row_data[col_nip] = str(val_nip).strip()
+                new_row_data[col_perner] = str(val_perner).strip()
+                new_row_data[col_nama] = str(val_nama).strip()
+                new_row_data["Jenis"] = str(val_jenis)
+                new_row_data["Agama"] = str(val_agama)
+
+                new_row_data["Status Pegawai"] = "Aktif"
+                new_row_data["gaji_pokok"] = val_gaji
+                new_row_data["bobot_upct"] = val_b_upct
+                new_row_data["nilai_upct"] = val_gaji * val_b_upct
+                new_row_data["bobot_thr"] = val_b_thr
+                new_row_data["nilai_thr"] = val_gaji * val_b_thr
+                new_row_data[col_sk] = str(val_no_sk).strip()
+                new_row_data["start_date"] = (
+                    val_start.strftime("%Y-%m-%d") if val_start else ""
+                )
+                new_row_data["end_date"] = (
+                    val_end.strftime("%Y-%m-%d") if val_end else ""
+                )
+                new_row_data["masa_kontrak"] = m_kontrak_baru
+
+                new_row_data[col_upct] = "Belum/Gagal"
+                new_row_data[col_thr] = "Belum/Gagal"
+                new_row_data[col_cat_upct] = "-"
+                new_row_data[col_cat_thr] = "-"
+                new_row_data[col_tgl_upct] = "-"
+                new_row_data[col_tgl_thr] = "-"
+
+                new_row_data.pop("label_dropdown", None)
+                new_row_data.pop("label_simpel", None)
+
+                new_df_row = pd.DataFrame([new_row_data])
+                df_updated = pd.concat([df, new_df_row], ignore_index=True)
+                save_data(df_updated)
+
+                st.session_state["flash_msg"] = (
+                    f"🎉 SK Lama ({row_data.get(col_sk, '-')}) diset SELESAI KONTRAK, "
+                    f"dan SK Baru ({val_no_sk}) atas nama {val_nama} BERHASIL DITAMBAHKAN!"
+                )
+                st.rerun()
+
 
     # MENU 4: HAPUS DATA PEGAWAI
     elif menu == "Hapus Data Pegawai":
